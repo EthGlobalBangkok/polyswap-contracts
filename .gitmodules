@@ -7,3 +7,6 @@
 [submodule "lib/composable-cow"]
 	path = lib/composable-cow
 	url = https://github.com/cowprotocol/composable-cow
+[submodule "lib/ctf-exchange"]
+	path = lib/ctf-exchange
+	url = https://github.com/Polymarket/ctf-exchange
