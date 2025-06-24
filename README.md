@@ -1,66 +1,37 @@
-## Foundry
+# 📈 PolySwap Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**Automated DeFi swaps triggered by on-chain prediction market outcomes.**
 
-Foundry consists of:
+This repository contains the core smart contracts of **PolySwap**, a protocol that allows users to create conditional swap intents based on prediction markets like [Polymarket](https://polymarket.com/).
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## 🛠️ What It Does
 
-## Documentation
+PolySwap lets users define CoW Swap orders that become valid only when a specific prediction market condition is met.
+The contract checks the status of a Polymarket order and activates the swap only if that order has been fully filled (indicating the prediction condition was reached).
 
-https://book.getfoundry.sh/
+## 🧱 Contract Overview (not finished yet)
 
-## Usage
+* `IConditionalOrderGenerator`: Interface for condition-based CoW Swap orders.
+* `PolySwapOrderVerifier`: Verifies whether the Polymarket condition (order filled) is satisfied.
 
-### Build
+The core logic uses the Polymarket `CTFExchange` contract to check if:
 
-```shell
-$ forge build
-```
+* the order is filled or cancelled, and
+* the remaining amount is `0`.
 
-### Test
+## 🧪 Stack
 
-```shell
-$ forge test
-```
+* [Solidity](https://soliditylang.org)
+* [Foundry](https://book.getfoundry.sh/) for development and testing
+* [Polygon PoS](https://polygon.technology) as the initial deployment network
 
-### Format
+## 🚀 Deployment
 
-```shell
-$ forge fmt
-```
+All contracts are deployed on **Polygon** for compatibility with Polymarket's on-chain infrastructure.
 
-### Gas Snapshots
+Contract Address: `0xdeadbeef`
 
-```shell
-$ forge snapshot
-```
+## 🧑‍💻 Authors
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+ | [<img src="https://github.com/Intermarch3.png?size=85" width=85><br><sub>Lucas Leclerc</sub>](https://github.com/Intermarch3) | [<img src="https://github.com/Pybast.png?size=85" width=85><br><sub>Baptiste Florentin</sub>](https://github.com/Pybast)
+ | :---: | :---: |
