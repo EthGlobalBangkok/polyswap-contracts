@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -58,7 +58,7 @@ library PolyswapOrder {
         // Check if the Polymarket order is valid and not filled or cancelled.
         if (!(self.polymarketOrderHash == 0)) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
         OrderStatus memory order = polymarket.getOrderStatus(self.polymarketOrderHash);
-        if (!(order.remaining != 0 || order.isFilledOrCancelled == false)) {
+        if (order.remaining == 0 && order.isFilledOrCancelled == false) {
             revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
         }
     }
@@ -78,7 +78,7 @@ library PolyswapOrder {
             receiver: self.receiver,
             sellAmount: self.sellAmount,
             buyAmount: self.minBuyAmount,
-            validTo: uint32(self.t),
+            validTo: self.t.toUint32(),
             appData: self.polymarketOrderHash,
             feeAmount: 0,
             kind: GPv2Order.KIND_SELL,
