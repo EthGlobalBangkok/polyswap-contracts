@@ -20,10 +20,11 @@ string constant CONDITION_NOT_MET = "condition not met";
 string constant POLYMARKET_ORDER_CANCELLED = "polymarket order cancelled";
 
 /**
-    * @title Polyswap Conditional Order
-    * @dev This contract implements the logic for generating a tradeable order based on a Polyswap order.
-    *      It inherits from BaseConditionalOrder to work with the ComposableCoW framework.
-**/
+ * @title Polyswap Conditional Order
+ * @dev This contract implements the logic for generating a tradeable order based on a Polyswap order.
+ *      It inherits from BaseConditionalOrder to work with the ComposableCoW framework.
+ *
+ */
 contract Polyswap is BaseConditionalOrder {
     ComposableCoW public immutable composableCow;
     Trading public immutable polymarket;
