@@ -10,3 +10,6 @@
 [submodule "lib/ctf-exchange"]
 	path = lib/ctf-exchange
 	url = https://github.com/Polymarket/ctf-exchange
+[submodule "lib/extensible-fallback-handler"]
+	path = lib/extensible-fallback-handler
+	url = https://github.com/cowdao-grants/extensible-fallback-handler
