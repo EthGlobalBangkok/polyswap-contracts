@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 
 import {IERC20} from "cowprotocol/contracts/interfaces/IERC20.sol";
 
@@ -37,11 +38,20 @@ contract SubmitSingleOrder is Script {
             buyToken: buyToken,
             receiver: address(0),
             sellAmount: 1e17, // 0.1 sell token
-            minBuyAmount: 99e16, // 0.099 buy token
+            minBuyAmount: 90e16, // 0.09 buy token
             t0: block.timestamp,
             t: block.timestamp + 30 days,
             polymarketOrderHash: polymarketOrderHash
         });
+
+        IConditionalOrder.ConditionalOrderParams memory params = IConditionalOrder.ConditionalOrderParams({
+            handler: IConditionalOrder(p),
+            salt: keccak256(abi.encodePacked("Polyswap", block.timestamp)),
+            staticInput: abi.encode(polyswapOrder)
+        });
+
+        // bytes32 orderHash = composableCow.hash(params);
+        // console.logBytes32(orderHash);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -52,11 +62,7 @@ contract SubmitSingleOrder is Script {
             abi.encodeCall(
                 composableCow.create,
                 (
-                    IConditionalOrder.ConditionalOrderParams({
-                        handler: IConditionalOrder(p),
-                        salt: keccak256(abi.encodePacked("Polyswap", block.timestamp)),
-                        staticInput: abi.encode(polyswapOrder)
-                    }),
+                    params,
                     true
                 )
             ),
