@@ -8,7 +8,7 @@
 `cast call $POLYMARKET_MOCK "getOrderStatus(bytes32)((bool,uint256))" $POLYMARKET_ORDER_HASH --rpc-url https://polygon-rpc.com`
 
 #### approve the sell token on the safe to the spender
-`cast send $SELL_TOKEN "approve(address,address,uint256)" $SAFE $SPENDER 0.01ether --private-key $PRIVATE_KEY --rpc-url https://polygon-rpc.com`
+`forge script ./script/SubmitSingleOrder.s.sol:ApproveSellTokenOnSafe --rpc-url https://polygon-rpc.com --broadcast --private-key $PRIVATE_KEY`
 
 ### if first time conditional order on safe:
 #### set fallback handler one time

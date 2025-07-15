@@ -50,13 +50,13 @@ library PolyswapOrder {
         if (!(address(self.sellToken) != address(0) && address(self.buyToken) != address(0))) {
             revert IConditionalOrder.OrderNotValid(INVALID_TOKEN);
         }
-        if (!(self.t0 > block.timestamp)) revert IConditionalOrder.OrderNotValid(INVALID_START_DATE);
+        if (!(self.t0 < type(uint32).max)) revert IConditionalOrder.OrderNotValid(INVALID_START_DATE);
         if (!(self.t > self.t0 && self.t < type(uint32).max)) revert IConditionalOrder.OrderNotValid(INVALID_END_DATE);
         if (!(self.sellAmount > 0)) revert IConditionalOrder.OrderNotValid(INVALID_SELL_AMOUNT);
         if (!(self.minBuyAmount > 0)) revert IConditionalOrder.OrderNotValid(INVALID_MIN_BUY_AMOUNT);
 
         // Check if the Polymarket order is valid and not filled or cancelled.
-        if (!(self.polymarketOrderHash == 0)) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
+        if (!(self.polymarketOrderHash != 0)) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
         OrderStatus memory order = polymarket.getOrderStatus(self.polymarketOrderHash);
         if (order.remaining == 0 && order.isFilledOrCancelled == false) {
             revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
@@ -79,7 +79,7 @@ library PolyswapOrder {
             sellAmount: self.sellAmount,
             buyAmount: self.minBuyAmount,
             validTo: self.t.toUint32(),
-            appData: self.polymarketOrderHash,
+            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b), // need to create our own app data
             feeAmount: 0,
             kind: GPv2Order.KIND_SELL,
             partiallyFillable: false,

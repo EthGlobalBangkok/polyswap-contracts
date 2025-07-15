@@ -13,6 +13,7 @@ import {Enum} from "safe/common/Enum.sol";
 
 // Composable CoW
 import {IConditionalOrder, ComposableCoW} from "composable-cow/src/ComposableCoW.sol";
+import {IValueFactory} from "composable-cow/src/interfaces/IValueFactory.sol";
 
 // Polyswap
 import {PolyswapOrder} from "../src/PolyswapOrder.sol";
@@ -37,10 +38,10 @@ contract SubmitSingleOrder is Script {
             sellToken: sellToken,
             buyToken: buyToken,
             receiver: address(0),
-            sellAmount: 1e17, // 0.1 sell token
-            minBuyAmount: 90e16, // 0.09 buy token
+            sellAmount: 100000, // 0.1 sell token
+            minBuyAmount: 80000, // 0.08 buy token
             t0: block.timestamp,
-            t: block.timestamp + 30 days,
+            t: block.timestamp + 1 days,
             polymarketOrderHash: polymarketOrderHash
         });
 
@@ -50,8 +51,7 @@ contract SubmitSingleOrder is Script {
             staticInput: abi.encode(polyswapOrder)
         });
 
-        // bytes32 orderHash = composableCow.hash(params);
-        // console.logBytes32(orderHash);
+        console.logBytes32(composableCow.hash(params));
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -60,9 +60,11 @@ contract SubmitSingleOrder is Script {
             address(composableCow),
             0,
             abi.encodeCall(
-                composableCow.create,
+                composableCow.createWithContext,
                 (
                     params,
+                    IValueFactory(0x52eD56Da04309Aca4c3FECC595298d80C2f16BAc), // TimestampValueFactory
+                    bytes(""),
                     true
                 )
             ),
@@ -71,5 +73,30 @@ contract SubmitSingleOrder is Script {
         );
 
         vm.stopBroadcast();
+    }
+}
+
+contract ApproveSellTokenOnSafe is Script {
+    using SafeLib for Safe;
+
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        Safe safe = Safe(payable(vm.envAddress("SAFE")));
+        IERC20 sellToken = IERC20(vm.envAddress("SELL_TOKEN"));
+        address spender = vm.envAddress("SPENDER");
+
+        safe.executeSingleOwner(
+            address(sellToken),
+            0,
+            abi.encodeCall(
+                sellToken.approve,
+                (
+                    spender,
+                    type(uint256).max
+                )
+            ),
+            Enum.Operation.Call,
+            vm.addr(deployerPrivateKey)
+        );
     }
 }
