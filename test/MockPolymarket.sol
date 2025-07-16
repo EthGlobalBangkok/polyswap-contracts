@@ -9,14 +9,12 @@ struct OrderStatus {
 contract MockPolymarket {
     mapping(bytes32 => OrderStatus) public orderStatus;
     // Mock function to simulate the Polymarket order status
+
     function getOrderStatus(bytes32 orderHash) public view returns (OrderStatus memory) {
-        return orderStatus[ orderHash];
+        return orderStatus[orderHash];
     }
 
     function setOrderStatus(bytes32 orderHash, bool isFilledOrCancelled, uint256 remaining) public {
-        orderStatus[orderHash] = OrderStatus({
-            isFilledOrCancelled: isFilledOrCancelled,
-            remaining: remaining
-        });
+        orderStatus[orderHash] = OrderStatus({isFilledOrCancelled: isFilledOrCancelled, remaining: remaining});
     }
 }

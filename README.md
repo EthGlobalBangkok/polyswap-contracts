@@ -9,15 +9,18 @@ This repository contains the core smart contracts of **PolySwap**, a protocol th
 PolySwap lets users define CoW Swap orders that become valid only when a specific prediction market condition is met.
 The contract checks the status of a Polymarket order and activates the swap only if that order has been fully filled (indicating the prediction condition was reached).
 
-## 🧱 Contract Overview (not finished yet)
+## 🧱 Contract Overview
 
-* `IConditionalOrderGenerator`: Interface for condition-based CoW Swap orders.
-* `PolySwapOrderVerifier`: Verifies whether the Polymarket condition (order filled) is satisfied.
+* `BaseConditionalOrder`: Abstract contract to inherit for compatibility with ComposableCoW.
+* `Polyswap`: Main contract that inherits from `BaseConditionalOrder` and verifies if the Polymarket order is filled.
+* `PolySwapOrder`: Verifies if the Polyswap order parameters are correct and defines the order struct.
 
-The core logic uses the Polymarket `CTFExchange` contract to check if:
+The `Polyswap` contract uses the Polymarket `CTFExchange` contract to check, via the `getOrderStatus()` function, whether:
 
 * the order is filled or cancelled, and
 * the remaining amount is `0`.
+
+If both conditions are met, the swap is executed using the Composable CoW Swap protocol.
 
 ## 🧪 Stack
 

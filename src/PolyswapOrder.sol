@@ -37,6 +37,7 @@ library PolyswapOrder {
         uint256 t0; // start valide date of the order
         uint256 t; // maximum date for the order to be valid
         bytes32 polymarketOrderHash; // hash of the Polymarket order
+        bytes32 appData;
     }
 
     // --- functions
@@ -79,7 +80,7 @@ library PolyswapOrder {
             sellAmount: self.sellAmount,
             buyAmount: self.minBuyAmount,
             validTo: self.t.toUint32(),
-            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b), // need to create our own app data
+            appData: self.appData,
             feeAmount: 0,
             kind: GPv2Order.KIND_SELL,
             partiallyFillable: false,

@@ -19,7 +19,6 @@ import {IValueFactory} from "composable-cow/src/interfaces/IValueFactory.sol";
 import {PolyswapOrder} from "../src/PolyswapOrder.sol";
 import {Polyswap} from "../src/Polyswap.sol";
 
-
 contract SubmitSingleOrder is Script {
     using SafeLib for Safe;
 
@@ -42,7 +41,8 @@ contract SubmitSingleOrder is Script {
             minBuyAmount: 80000, // 0.08 buy token
             t0: block.timestamp,
             t: block.timestamp + 1 days,
-            polymarketOrderHash: polymarketOrderHash
+            polymarketOrderHash: polymarketOrderHash,
+            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b) // twap app data for the test
         });
 
         IConditionalOrder.ConditionalOrderParams memory params = IConditionalOrder.ConditionalOrderParams({
@@ -88,13 +88,7 @@ contract ApproveSellTokenOnSafe is Script {
         safe.executeSingleOwner(
             address(sellToken),
             0,
-            abi.encodeCall(
-                sellToken.approve,
-                (
-                    spender,
-                    type(uint256).max
-                )
-            ),
+            abi.encodeCall(sellToken.approve, (spender, type(uint256).max)),
             Enum.Operation.Call,
             vm.addr(deployerPrivateKey)
         );
