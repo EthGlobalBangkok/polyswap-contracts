@@ -32,7 +32,8 @@ If both conditions are met, the swap is executed using the Composable CoW Swap p
 
 All contracts are deployed on **Polygon** for compatibility with Polymarket's on-chain infrastructure.
 
-Contract Address: `0xdeadbeef`
+Contract Address: `0xC75f4070B794cE1EC7273767a7d67354F845c7ce`
+View on [Sourcify](https://repo.sourcify.dev/137/0xC75f4070B794cE1EC7273767a7d67354F845c7ce)
 
 ## 🧑‍💻 Authors
 
