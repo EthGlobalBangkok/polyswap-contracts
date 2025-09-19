@@ -57,7 +57,7 @@ contract Polyswap is BaseConditionalOrder {
         if (status.isFilledOrCancelled && status.remaining != 0) {
             revert IConditionalOrder.PollNever(POLYMARKET_ORDER_CANCELLED);
         }
-        if (!(status.isFilledOrCancelled && status.remaining == 0)) {
+        if (status.isFilledOrCancelled == false || status.remaining != 0) {
             revert IConditionalOrder.PollTryNextBlock(CONDITION_NOT_MET);
         }
     }

@@ -1,4 +1,4 @@
-@openzeppelin/=lib/composable-cow/lib/@openzeppelin/
+@openzeppelin/=lib/openzeppelin-contracts/
 common/=lib/ctf-exchange/src/common/
 composable-cow/=lib/composable-cow/
 @composable-cow/=lib/composable-cow/src
@@ -10,3 +10,4 @@ openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/
 openzeppelin/=lib/composable-cow/lib/@openzeppelin/contracts/
 safe/=lib/composable-cow/lib/safe/contracts/
 safe/=lib/extensible-fallback-handler/contracts/
+

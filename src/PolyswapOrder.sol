@@ -47,17 +47,17 @@ library PolyswapOrder {
      * @param self The PolyswapOrder order to validate
      */
     function validate(Data memory self, Trading polymarket) internal view {
-        if (!(self.sellToken != self.buyToken)) revert IConditionalOrder.OrderNotValid(INVALID_SAME_TOKEN);
-        if (!(address(self.sellToken) != address(0) && address(self.buyToken) != address(0))) {
+        if (self.sellToken == self.buyToken) revert IConditionalOrder.OrderNotValid(INVALID_SAME_TOKEN);
+        if (address(self.sellToken) == address(0) || address(self.buyToken) == address(0)) {
             revert IConditionalOrder.OrderNotValid(INVALID_TOKEN);
         }
-        if (!(self.t0 < type(uint32).max)) revert IConditionalOrder.OrderNotValid(INVALID_START_DATE);
-        if (!(self.t > self.t0 && self.t < type(uint32).max)) revert IConditionalOrder.OrderNotValid(INVALID_END_DATE);
-        if (!(self.sellAmount > 0)) revert IConditionalOrder.OrderNotValid(INVALID_SELL_AMOUNT);
-        if (!(self.minBuyAmount > 0)) revert IConditionalOrder.OrderNotValid(INVALID_MIN_BUY_AMOUNT);
+        if (self.t0 > block.timestamp) revert IConditionalOrder.OrderNotValid(INVALID_START_DATE);
+        if (self.t <= self.t0 || self.t < block.timestamp) revert IConditionalOrder.OrderNotValid(INVALID_END_DATE);
+        if (self.sellAmount < 0) revert IConditionalOrder.OrderNotValid(INVALID_SELL_AMOUNT);
+        if (self.minBuyAmount < 0) revert IConditionalOrder.OrderNotValid(INVALID_MIN_BUY_AMOUNT);
 
         // Check if the Polymarket order is valid and not filled or cancelled.
-        if (!(self.polymarketOrderHash != 0)) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
+        if (self.polymarketOrderHash == 0) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
         OrderStatus memory order = polymarket.getOrderStatus(self.polymarketOrderHash);
         if (order.remaining == 0 && order.isFilledOrCancelled == false) {
             revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
@@ -81,7 +81,7 @@ library PolyswapOrder {
             buyAmount: self.minBuyAmount,
             validTo: self.t.toUint32(),
             appData: self.appData,
-            feeAmount: 0,
+            feeAmount: 0, // TODO we should allow for some fees
             kind: GPv2Order.KIND_SELL,
             partiallyFillable: false,
             sellTokenBalance: GPv2Order.BALANCE_ERC20,
