@@ -72,7 +72,6 @@ contract PolyswapTest is Test {
     address public owner;
     address public user1;
     address public user2;
-    address public solver;
 
     Safe public testSafe;
 
@@ -96,18 +95,15 @@ contract PolyswapTest is Test {
         owner = makeAddr("owner");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
-        solver = makeAddr("solver");
 
         console.log("Owner:", owner);
         console.log("User1:", user1);
         console.log("User2:", user2);
-        console.log("Solver:", solver);
 
         // Fund test accounts
         vm.deal(owner, 100 ether);
         vm.deal(user1, 100 ether);
         vm.deal(user2, 100 ether);
-        vm.deal(solver, 100 ether);
 
         // Setup real contracts from Polygon
         composableCow = ComposableCoW(POLYGON_COMPOSABLE_COW);
