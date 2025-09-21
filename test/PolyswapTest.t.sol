@@ -516,45 +516,4 @@ contract PolyswapTest is Test {
             appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b)
         });
     }
-
-    // // ===== INVARIANT TESTS =====
-
-    // /**
-    //  * @dev Invariant: Valid orders should always produce valid GPv2Orders
-    //  */
-    // function invariantValidOrderProducesValidGPv2Order() public {
-    //     mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 100);
-
-    //     PolyswapOrder.Data memory order = _createTestOrder();
-    //     GPv2Order.Data memory gpv2Order = PolyswapOrder.orderFor(order, Trading(address(mockPolymarket)));
-
-    //     // Invariant checks
-    //     assertTrue(address(gpv2Order.sellToken) != address(0), "Sell token should not be zero");
-    //     assertTrue(address(gpv2Order.buyToken) != address(0), "Buy token should not be zero");
-    //     assertTrue(gpv2Order.sellAmount > 0, "Sell amount should be positive");
-    //     assertTrue(gpv2Order.buyAmount > 0, "Buy amount should be positive");
-    //     assertTrue(gpv2Order.validTo > block.timestamp, "Order should not be expired");
-    //     assertEq(gpv2Order.kind, GPv2Order.KIND_SELL, "Should be sell order");
-    //     assertFalse(gpv2Order.partiallyFillable, "Should not be partially fillable");
-    // }
-
-    // /**
-    //  * @dev Invariant: Fulfilled Polymarket orders should always allow order execution
-    //  */
-    // function invariantFulfilledPolymarketOrderAllowsExecution() public {
-    //     // Setup fulfilled Polymarket order
-    //     mockPolymarket.setOrderStatus(TEST_ORDER_HASH, true, 0);
-
-    //     PolyswapOrder.Data memory order = _createTestOrder();
-
-    //     // Should not revert
-    //     GPv2Order.Data memory gpv2Order =
-    //         polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
-
-    //     // Invariant: returned order should match input parameters
-    //     assertEq(address(gpv2Order.sellToken), address(order.sellToken));
-    //     assertEq(address(gpv2Order.buyToken), address(order.buyToken));
-    //     assertEq(gpv2Order.sellAmount, order.sellAmount);
-    //     assertEq(gpv2Order.buyAmount, order.minBuyAmount);
-    // }
 }
