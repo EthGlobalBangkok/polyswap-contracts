@@ -24,5 +24,5 @@
 #### create a polyswap order
 `forge script ./script/SubmitSingleOrder.s.sol:SubmitSingleOrder --rpc-url https://polygon-rpc.com --broadcast --private-key $PRIVATE_KEY`
 
-### set the order status to filled in the mock contract
+### set the order status to filled in the mock contract (simulate polymarket limit order filled)
 `cast send $POLYMARKET_MOCK "setOrderStatus(bytes32,bool,uint256)" $POLYMARKET_ORDER_HASH true 0 --private-key $PRIVATE_KEY --rpc-url https://polygon-rpc.com`

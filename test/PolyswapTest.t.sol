@@ -15,7 +15,7 @@ import {Enum} from "safe/common/Enum.sol";
 // Composable CoW
 import {IConditionalOrder, ComposableCoW} from "composable-cow/src/ComposableCoW.sol";
 import {IValueFactory} from "composable-cow/src/interfaces/IValueFactory.sol";
-import {ExtensibleFallbackHandler} from "safe/handler/ExtensibleFallbackHandler.sol";
+import {ExtensibleFallbackHandler, ERC1271} from "safe/handler/ExtensibleFallbackHandler.sol";
 import {SignatureVerifierMuxer} from "safe/handler/extensible/SignatureVerifierMuxer.sol";
 import {ISafeSignatureVerifier} from "safe/handler/extensible/SignatureVerifierMuxer.sol";
 
@@ -50,8 +50,8 @@ contract PolyswapTest is Test {
     address public constant POLYGON_TIMESTAMP_VALUE_FACTORY = 0x52eD56Da04309Aca4c3FECC595298d80C2f16BAc; // TimestampValueFactory on Polygon
 
     // BLINDSPOT: Need real Polymarket contract address on Polygon
-    // Polymarket CTF Exchange contract address - needs to be updated with real address
-    address public constant POLYGON_POLYMARKET_EXCHANGE = address(0); // UPDATE REQUIRED
+    // Polymarket CTF Exchange contract address
+    address public constant POLYGON_POLYMARKET_EXCHANGE = address(0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E);
 
     // Test tokens on Polygon
     address public constant USDC_POLYGON = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
@@ -145,10 +145,10 @@ contract PolyswapTest is Test {
         PolyswapOrder.Data memory order = _createTestOrder();
 
         // Should not revert on validation
-        PolyswapOrder.validate(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(order);
 
         // Should generate valid GPv2Order
-        GPv2Order.Data memory gpv2Order = PolyswapOrder.orderFor(order, Trading(address(mockPolymarket)));
+        GPv2Order.Data memory gpv2Order = PolyswapOrder.orderFor(order);
 
         assertEq(address(gpv2Order.sellToken), address(order.sellToken));
         assertEq(address(gpv2Order.buyToken), address(order.buyToken));
@@ -206,28 +206,28 @@ contract PolyswapTest is Test {
         invalidOrder.buyToken = invalidOrder.sellToken;
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, "same token"));
-        PolyswapOrder.validate(invalidOrder, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(invalidOrder);
 
         // Test zero sell amount
         invalidOrder = _createTestOrder();
         invalidOrder.sellAmount = 0;
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, "invalid sell amount"));
-        PolyswapOrder.validate(invalidOrder, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(invalidOrder);
 
         // Test zero buy amount
         invalidOrder = _createTestOrder();
         invalidOrder.minBuyAmount = 0;
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, "invalid min buy amount"));
-        PolyswapOrder.validate(invalidOrder, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(invalidOrder);
 
         // Test invalid time range
         invalidOrder = _createTestOrder();
         invalidOrder.t = invalidOrder.t0 - 1;
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, "invalid end date"));
-        PolyswapOrder.validate(invalidOrder, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(invalidOrder);
     }
 
     // ===== INTEGRATION TESTS WITH REAL CONTRACTS =====
@@ -325,7 +325,7 @@ contract PolyswapTest is Test {
         order.t = uint256(block.timestamp - 1); // Expired
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, INVALID_END_DATE));
-        PolyswapOrder.validate(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(order);
     }
 
     /**
@@ -337,7 +337,7 @@ contract PolyswapTest is Test {
         order.polymarketOrderHash = bytes32(0);
 
         vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, INVALID_POLYMARKET_ORDER_HASH));
-        PolyswapOrder.validate(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(order);
     }
 
     // TODO more negative tests
@@ -352,19 +352,81 @@ contract PolyswapTest is Test {
 
         // Measure validation gas
         uint256 gasStart = gasleft();
-        PolyswapOrder.validate(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(order);
         uint256 validationGas = gasStart - gasleft();
         console.log("Validation gas:", validationGas);
 
         // Measure order generation gas
         gasStart = gasleft();
-        PolyswapOrder.orderFor(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.orderFor(order);
         uint256 orderGenGas = gasStart - gasleft();
         console.log("Order generation gas:", orderGenGas);
 
         // Set reasonable gas limits
         assertTrue(validationGas < 50000, "Validation gas too high");
         assertTrue(orderGenGas < 30000, "Order generation gas too high");
+    }
+
+    /**
+     * @dev Test isValidSafeSignature function from ComposableCoW in real context
+     */
+    function test_integration_isValidSafeSignature() public {
+        // Setup: Polymarket order fulfilled so condition is met
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, true, 0);
+
+        PolyswapOrder.Data memory order = _createTestOrder();
+
+        // Create conditional order params
+        IConditionalOrder.ConditionalOrderParams memory params = IConditionalOrder.ConditionalOrderParams({
+            handler: IConditionalOrder(address(polyswap)),
+            salt: keccak256(abi.encodePacked("signature-test", block.timestamp)),
+            staticInput: abi.encode(order)
+        });
+
+        // Create the conditional order first
+        vm.prank(owner);
+        testSafe.executeSingleOwner(
+            address(composableCow),
+            0,
+            abi.encodeCall(composableCow.create, (params, false)),
+            Enum.Operation.Call,
+            owner
+        );
+
+        // Get the tradeable order that would be generated
+        GPv2Order.Data memory gpv2Order = polyswap.getTradeableOrder(
+            address(testSafe),
+            address(this),
+            bytes32(0),
+            abi.encode(order),
+            bytes("")
+        );
+
+        // Create the payload for isValidSafeSignature
+        ComposableCoW.PayloadStruct memory payload = ComposableCoW.PayloadStruct({
+            proof: new bytes32[](0), // Empty proof for single order
+            params: params,
+            offchainInput: bytes("")
+        });
+
+        // Hash the order for signature validation
+        bytes32 orderHash = GPv2Order.hash(gpv2Order, composableCow.domainSeparator());
+
+        bytes32 domainSeparator = composableCow.domainSeparator();
+
+        // Call isValidSafeSignature - this should succeed
+        bytes4 result = composableCow.isValidSafeSignature(
+            testSafe,
+            address(this),
+            orderHash,
+            domainSeparator,
+            GPv2Order.TYPE_HASH,
+            abi.encode(gpv2Order),
+            abi.encode(payload)
+        );
+
+        // Should return the ERC1271 magic value
+        assertEq(result, ERC1271.isValidSignature.selector);
     }
 
     // /**
@@ -409,7 +471,7 @@ contract PolyswapTest is Test {
         PolyswapOrder.Data memory order = PolyswapOrder.Data({
             sellToken: IERC20(USDC_POLYGON),
             buyToken: IERC20(USDT_POLYGON),
-            receiver: address(0),
+            receiver: address(1),
             sellAmount: sellAmount,
             minBuyAmount: minBuyAmount,
             t0: block.timestamp,
@@ -419,8 +481,8 @@ contract PolyswapTest is Test {
         });
 
         // Should not revert with valid parameters
-        PolyswapOrder.validate(order, Trading(address(mockPolymarket)));
-        GPv2Order.Data memory gpv2Order = PolyswapOrder.orderFor(order, Trading(address(mockPolymarket)));
+        PolyswapOrder.validate(order);
+        GPv2Order.Data memory gpv2Order = PolyswapOrder.orderFor(order);
 
         assertEq(gpv2Order.sellAmount, sellAmount);
         assertEq(gpv2Order.buyAmount, minBuyAmount);
@@ -469,19 +531,19 @@ contract PolyswapTest is Test {
             safeOwner
         );
 
-        // // Set domain verifier for CoW Protocol through the fallback handler
-        // bytes32 domainSeparator = composableCow.domainSeparator();
-        // safe.executeSingleOwner(
-        //     address(safe),
-        //     0,
-        //     abi.encodeWithSelector(
-        //         SignatureVerifierMuxer.setDomainVerifier.selector,
-        //         domainSeparator,
-        //         ISafeSignatureVerifier(composableCow)
-        //     ),
-        //     Enum.Operation.Call,
-        //     safeOwner
-        // );
+        // Set domain verifier for CoW Protocol through the fallback handler
+        bytes32 domainSeparator = composableCow.domainSeparator();
+        safe.executeSingleOwner(
+            address(safe),
+            0,
+            abi.encodeWithSelector(
+                SignatureVerifierMuxer.setDomainVerifier.selector,
+                domainSeparator,
+                ISafeSignatureVerifier(composableCow)
+            ),
+            Enum.Operation.Call,
+            safeOwner
+        );
 
         vm.stopPrank();
     }
@@ -507,7 +569,7 @@ contract PolyswapTest is Test {
         return PolyswapOrder.Data({
             sellToken: IERC20(USDC_POLYGON),
             buyToken: IERC20(USDT_POLYGON),
-            receiver: address(0),
+            receiver: address(1),
             sellAmount: 100000, // 0.1 USDC (6 decimals)
             minBuyAmount: 80000, // 0.08 USDT (6 decimals)
             t0: block.timestamp,

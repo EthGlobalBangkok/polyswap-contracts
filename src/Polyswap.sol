@@ -50,7 +50,7 @@ contract Polyswap is BaseConditionalOrder {
          */
         PolyswapOrder.Data memory polyswapOrder = abi.decode(staticInput, (PolyswapOrder.Data));
 
-        order = PolyswapOrder.orderFor(polyswapOrder, polymarket);
+        order = PolyswapOrder.orderFor(polyswapOrder);
 
         // check if the polymarket order is fulfilled
         OrderStatus memory status = polymarket.getOrderStatus(polyswapOrder.polymarketOrderHash);
