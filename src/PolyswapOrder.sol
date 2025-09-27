@@ -18,6 +18,7 @@ string constant INVALID_MIN_BUY_AMOUNT = "invalid min buy amount";
 string constant INVALID_POLYMARKET_ORDER_HASH = "invalid order hash";
 string constant INVALID_START_DATE = "invalid start date";
 string constant INVALID_END_DATE = "invalid end date";
+string constant INVALID_RECEIVER = "invalid receiver";
 
 /**
  * @title Polyswap Order Library
@@ -46,11 +47,12 @@ library PolyswapOrder {
      * @dev revert if the order is invalid
      * @param self The PolyswapOrder order to validate
      */
-    function validate(Data memory self, Trading polymarket) internal view {
+    function validate(Data memory self) internal view {
         if (self.sellToken == self.buyToken) revert IConditionalOrder.OrderNotValid(INVALID_SAME_TOKEN);
         if (address(self.sellToken) == address(0) || address(self.buyToken) == address(0)) {
             revert IConditionalOrder.OrderNotValid(INVALID_TOKEN);
         }
+        if (self.receiver == address(0)) revert IConditionalOrder.OrderNotValid(INVALID_RECEIVER);
         if (self.t0 > block.timestamp) revert IConditionalOrder.OrderNotValid(INVALID_START_DATE);
         if (self.t <= self.t0 || self.t < block.timestamp) revert IConditionalOrder.OrderNotValid(INVALID_END_DATE);
         if (self.sellAmount < 0) revert IConditionalOrder.OrderNotValid(INVALID_SELL_AMOUNT);
@@ -58,10 +60,6 @@ library PolyswapOrder {
 
         // Check if the Polymarket order is valid and not filled or cancelled.
         if (self.polymarketOrderHash == 0) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
-        OrderStatus memory order = polymarket.getOrderStatus(self.polymarketOrderHash);
-        if (order.remaining == 0 && order.isFilledOrCancelled == false) {
-            revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
-        }
     }
 
     /**
@@ -69,9 +67,9 @@ library PolyswapOrder {
      * @param self The Polyswap order to generate the order for.
      * @return order The `GPv2Order` of the Polyswap order.
      */
-    function orderFor(Data memory self, Trading polymarket) internal view returns (GPv2Order.Data memory order) {
+    function orderFor(Data memory self) internal view returns (GPv2Order.Data memory order) {
         // First, validate and revert if the order is invalid.
-        validate(self, polymarket);
+        validate(self);
 
         order = GPv2Order.Data({
             sellToken: self.sellToken,

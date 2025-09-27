@@ -21,6 +21,7 @@ The `Polyswap` contract uses the Polymarket `CTFExchange` contract to check, via
 * the remaining amount is `0`.
 
 If both conditions are met, the swap is executed using the Composable CoW Swap protocol.
+Both conditions being met means that the limit order has been filled and that the price of the limit order has been achieved.
 
 ## 🧪 Stack
 
@@ -32,8 +33,8 @@ If both conditions are met, the swap is executed using the Composable CoW Swap p
 
 All contracts are deployed on **Polygon** for compatibility with Polymarket's on-chain infrastructure.
 
-Contract Address: `0xC75f4070B794cE1EC7273767a7d67354F845c7ce`
-View on [Sourcify](https://repo.sourcify.dev/137/0xC75f4070B794cE1EC7273767a7d67354F845c7ce)
+Contract Address: `0xE930639F0EbE2A7309f214e48e9F5ae3C5306Ff7`
+View on [Sourcify](https://repo.sourcify.dev/137/0xE930639F0EbE2A7309f214e48e9F5ae3C5306Ff7)
 
 ## 🧑‍💻 Authors
 
