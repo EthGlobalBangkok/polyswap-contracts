@@ -33,8 +33,8 @@ Both conditions being met means that the limit order has been filled and that th
 
 All contracts are deployed on **Polygon** for compatibility with Polymarket's on-chain infrastructure.
 
-Contract Address: `0x868c662d186689f773fAb37ea617E7cbeB293D86`
-View on [Sourcify](https://repo.sourcify.dev/137/0x868c662d186689f773fAb37ea617E7cbeB293D86)
+Contract Address: `0xE930639F0EbE2A7309f214e48e9F5ae3C5306Ff7`
+View on [Sourcify](https://repo.sourcify.dev/137/0xE930639F0EbE2A7309f214e48e9F5ae3C5306Ff7)
 
 ## 🧑‍💻 Authors
 
