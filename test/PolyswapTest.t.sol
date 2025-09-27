@@ -386,21 +386,12 @@ contract PolyswapTest is Test {
         // Create the conditional order first
         vm.prank(owner);
         testSafe.executeSingleOwner(
-            address(composableCow),
-            0,
-            abi.encodeCall(composableCow.create, (params, false)),
-            Enum.Operation.Call,
-            owner
+            address(composableCow), 0, abi.encodeCall(composableCow.create, (params, false)), Enum.Operation.Call, owner
         );
 
         // Get the tradeable order that would be generated
-        GPv2Order.Data memory gpv2Order = polyswap.getTradeableOrder(
-            address(testSafe),
-            address(this),
-            bytes32(0),
-            abi.encode(order),
-            bytes("")
-        );
+        GPv2Order.Data memory gpv2Order =
+            polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
 
         // Create the payload for isValidSafeSignature
         ComposableCoW.PayloadStruct memory payload = ComposableCoW.PayloadStruct({
