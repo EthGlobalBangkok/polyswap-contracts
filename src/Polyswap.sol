@@ -61,4 +61,13 @@ contract Polyswap is BaseConditionalOrder {
             revert IConditionalOrder.PollTryNextBlock(CONDITION_NOT_MET);
         }
     }
+
+    /**
+     * @dev Get the hash of the Polyswap order.
+     * @param polyswapOrder The Polyswap order to get the hash of.
+     * @return The hash of the Polyswap order.
+     */
+    function getOrderHash(PolyswapOrder.Data memory polyswapOrder) public view returns (bytes32) {
+        return GPv2Order.hash(PolyswapOrder.orderFor(polyswapOrder), composableCow.domainSeparator());
+    }
 }
