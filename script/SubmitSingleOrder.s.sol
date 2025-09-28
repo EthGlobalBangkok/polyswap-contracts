@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 
+import {GPv2Order} from "cowprotocol/contracts/libraries/GPv2Order.sol";
 import {IERC20} from "cowprotocol/contracts/interfaces/IERC20.sol";
 
 // Safe contracts
@@ -51,7 +52,7 @@ contract SubmitSingleOrder is Script {
             staticInput: abi.encode(polyswapOrder)
         });
 
-        console.logBytes32(composableCow.hash(params));
+        console.logBytes32(GPv2Order.hash(PolyswapOrder.orderFor(polyswapOrder), composableCow.domainSeparator()));
 
         vm.startBroadcast(deployerPrivateKey);
 

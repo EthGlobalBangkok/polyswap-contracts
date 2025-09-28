@@ -50,7 +50,7 @@ contract Polyswap is BaseConditionalOrder {
          */
         PolyswapOrder.Data memory polyswapOrder = abi.decode(staticInput, (PolyswapOrder.Data));
 
-        order = PolyswapOrder.orderFor(polyswapOrder, polymarket);
+        order = PolyswapOrder.orderFor(polyswapOrder);
 
         // check if the polymarket order is fulfilled
         OrderStatus memory status = polymarket.getOrderStatus(polyswapOrder.polymarketOrderHash);
@@ -60,5 +60,14 @@ contract Polyswap is BaseConditionalOrder {
         if (status.isFilledOrCancelled == false || status.remaining != 0) {
             revert IConditionalOrder.PollTryNextBlock(CONDITION_NOT_MET);
         }
+    }
+
+    /**
+     * @dev Get the hash of the Polyswap order.
+     * @param polyswapOrder The Polyswap order to get the hash of.
+     * @return The hash of the Polyswap order.
+     */
+    function getOrderHash(PolyswapOrder.Data memory polyswapOrder) public view returns (bytes32) {
+        return GPv2Order.hash(PolyswapOrder.orderFor(polyswapOrder), composableCow.domainSeparator());
     }
 }
