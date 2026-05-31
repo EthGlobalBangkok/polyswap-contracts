@@ -33,11 +33,11 @@ Both conditions being met means that the limit order has been filled and that th
 
 All contracts are deployed on **Polygon** for compatibility with Polymarket's on-chain infrastructure.
 
-Contract Address (CTF Exchange): `0x9ef209A0A5EA4f19320deB3E7264b7CC84d27db6`
-View on [Polygonscan](https://polygonscan.com/address/0x9ef209A0A5EA4f19320deB3E7264b7CC84d27db6#code)
+Contract Address (CTF Exchange): `0xEa8FA1438785b9464f988e3AFa1E464Ba3A110B1`
+View on [Polygonscan](https://polygonscan.com/address/0xEa8FA1438785b9464f988e3AFa1E464Ba3A110B1#code)
 
-Contract Address (Neg Risk CTF Exchange): `0x37E5593842BE20E376299F62a4a9EA8aF172E808`
-View on [Polygonscan](https://polygonscan.com/address/0x37E5593842BE20E376299F62a4a9EA8aF172E808#code)
+Contract Address (Neg Risk CTF Exchange): `0x04a7745Ee5c5cCE28aD0A2c956e789415a90EA7D`
+View on [Polygonscan](https://polygonscan.com/address/0x04a7745Ee5c5cCE28aD0A2c956e789415a90EA7D#code)
 
 ## 🧑‍💻 Authors
 

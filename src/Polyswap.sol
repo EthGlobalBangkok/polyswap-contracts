@@ -17,7 +17,6 @@ import {PolyswapOrder} from "./PolyswapOrder.sol";
 // --- error strings
 string constant INVALID_HASH = "invalid hash";
 string constant CONDITION_NOT_MET = "condition not met";
-string constant POLYMARKET_ORDER_CANCELLED = "polymarket order cancelled";
 
 /**
  * @title Polyswap Conditional Order
@@ -26,6 +25,9 @@ string constant POLYMARKET_ORDER_CANCELLED = "polymarket order cancelled";
  *
  */
 contract Polyswap is BaseConditionalOrder {
+    // Min fraction (bps) of the Polymarket maker amount that must be consumed to arm
+    uint256 internal constant MIN_FILL_BPS = 1000;
+
     ComposableCoW public immutable composableCow;
     Trading public immutable polymarket;
 
@@ -52,12 +54,17 @@ contract Polyswap is BaseConditionalOrder {
 
         order = PolyswapOrder.orderFor(polyswapOrder);
 
-        // check if the polymarket order is fulfilled
+        uint256 makerAmount = polyswapOrder.polymarketMakerAmount;
         OrderStatus memory status = polymarket.getOrderStatus(polyswapOrder.polymarketOrderHash);
-        if (status.isFilledOrCancelled && status.remaining != 0) {
-            revert IConditionalOrder.PollNever(POLYMARKET_ORDER_CANCELLED);
+
+        uint256 consumed;
+        if (status.remaining == 0) {
+            consumed = status.isFilledOrCancelled ? makerAmount : 0;
+        } else {
+            consumed = makerAmount > status.remaining ? makerAmount - status.remaining : 0;
         }
-        if (status.isFilledOrCancelled == false || status.remaining != 0) {
+
+        if (consumed * 10_000 < makerAmount * MIN_FILL_BPS) {
             revert IConditionalOrder.PollTryNextBlock(CONDITION_NOT_MET);
         }
     }

@@ -19,6 +19,7 @@ string constant INVALID_POLYMARKET_ORDER_HASH = "invalid order hash";
 string constant INVALID_START_DATE = "invalid start date";
 string constant INVALID_END_DATE = "invalid end date";
 string constant INVALID_RECEIVER = "invalid receiver";
+string constant INVALID_MAKER_AMOUNT = "invalid maker amount";
 
 /**
  * @title Polyswap Order Library
@@ -39,6 +40,7 @@ library PolyswapOrder {
         uint256 t; // maximum date for the order to be valid
         bytes32 polymarketOrderHash; // hash of the Polymarket order
         bytes32 appData;
+        uint256 polymarketMakerAmount; // original maker amount of the Polymarket order
     }
 
     // --- functions
@@ -60,6 +62,7 @@ library PolyswapOrder {
 
         // Check if the Polymarket order is valid and not filled or cancelled.
         if (self.polymarketOrderHash == 0) revert IConditionalOrder.OrderNotValid(INVALID_POLYMARKET_ORDER_HASH);
+        if (self.polymarketMakerAmount == 0) revert IConditionalOrder.OrderNotValid(INVALID_MAKER_AMOUNT);
     }
 
     /**

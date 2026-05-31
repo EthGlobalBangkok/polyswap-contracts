@@ -43,7 +43,8 @@ contract SubmitSingleOrder is Script {
             t0: block.timestamp,
             t: block.timestamp + 1 days,
             polymarketOrderHash: polymarketOrderHash,
-            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b) // twap app data for the test
+            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b), // twap app data for the test
+            polymarketMakerAmount: vm.envOr("POLYMARKET_MAKER_AMOUNT", uint256(1_000_000))
         });
 
         IConditionalOrder.ConditionalOrderParams memory params = IConditionalOrder.ConditionalOrderParams({

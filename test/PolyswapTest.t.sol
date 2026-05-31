@@ -20,7 +20,7 @@ import {SignatureVerifierMuxer} from "safe/handler/extensible/SignatureVerifierM
 import {ISafeSignatureVerifier} from "safe/handler/extensible/SignatureVerifierMuxer.sol";
 
 // Polyswap contracts
-import {PolyswapOrder, INVALID_END_DATE, INVALID_POLYMARKET_ORDER_HASH} from "../src/PolyswapOrder.sol";
+import {PolyswapOrder, INVALID_END_DATE, INVALID_POLYMARKET_ORDER_HASH, INVALID_MAKER_AMOUNT} from "../src/PolyswapOrder.sol";
 import {Polyswap} from "../src/Polyswap.sol";
 
 // Mock contracts
@@ -78,6 +78,8 @@ contract PolyswapTest is Test {
     // Test data
     uint256 public constant FORK_BLOCK = 75_882_806;
     bytes32 public constant TEST_ORDER_HASH = 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef;
+    // Original maker amount of the test Polymarket order; the gate arms at MIN_FILL_BPS (10%) of this.
+    uint256 public constant TEST_MAKER_AMOUNT = 1_000_000;
 
     // ===== EVENTS =====
 
@@ -160,8 +162,8 @@ contract PolyswapTest is Test {
      * @dev Test Polyswap conditional order execution when Polymarket order is fulfilled
      */
     function test_mocked_orderConditionalExecution() public {
-        // Setup: Polymarket order not yet filled
-        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 100);
+        // Setup: Polymarket order not yet filled (remaining == makerAmount → 0% consumed)
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, TEST_MAKER_AMOUNT);
 
         PolyswapOrder.Data memory order = _createTestOrder();
 
@@ -181,17 +183,38 @@ contract PolyswapTest is Test {
     }
 
     /**
-     * @dev Test order cancellation handling
+     * @dev The fill-fraction gate across the full range of Polymarket order statuses.
      */
-    function test_mocked_orderCancellation() public {
-        // Setup: Polymarket order cancelled with remaining amount
-        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, true, 50);
+    function test_mocked_fillFractionGate() public {
+        PolyswapOrder.Data memory order = _createTestOrder(); // makerAmount = TEST_MAKER_AMOUNT
 
-        PolyswapOrder.Data memory order = _createTestOrder();
-
-        // Should revert with PollNever when order is cancelled
-        vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.PollNever.selector, "polymarket order cancelled"));
+        // Untouched on-chain (false, 0): 0% consumed → not met
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 0);
+        vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.PollTryNextBlock.selector, "condition not met"));
         polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
+
+        // Partial below threshold: 5% consumed (remaining 950_000) → not met
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 950_000);
+        vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.PollTryNextBlock.selector, "condition not met"));
+        polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
+
+        // Exactly at threshold: 10% consumed (remaining 900_000) → arms
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 900_000);
+        GPv2Order.Data memory atThreshold =
+            polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
+        assertEq(atThreshold.sellAmount, order.sellAmount);
+
+        // Price-improvement dust (order-19 case): 98.75% consumed (remaining 12_500) → arms
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, false, 12_500);
+        GPv2Order.Data memory dust =
+            polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
+        assertEq(dust.sellAmount, order.sellAmount);
+
+        // Full fill (true, 0): 100% consumed → arms
+        mockPolymarket.setOrderStatus(TEST_ORDER_HASH, true, 0);
+        GPv2Order.Data memory full =
+            polyswap.getTradeableOrder(address(testSafe), address(this), bytes32(0), abi.encode(order), bytes(""));
+        assertEq(full.sellAmount, order.sellAmount);
     }
 
     /**
@@ -340,6 +363,18 @@ contract PolyswapTest is Test {
         PolyswapOrder.validate(order);
     }
 
+    /**
+     * @dev A zero maker amount would make the fill-fraction gate arm immediately; reject at validation.
+     */
+    /// forge-config: default.allow_internal_expect_revert = true
+    function test_edgeCase_zeroMakerAmount() public {
+        PolyswapOrder.Data memory order = _createTestOrder();
+        order.polymarketMakerAmount = 0;
+
+        vm.expectRevert(abi.encodeWithSelector(IConditionalOrder.OrderNotValid.selector, INVALID_MAKER_AMOUNT));
+        PolyswapOrder.validate(order);
+    }
+
     // TODO more negative tests
 
     /**
@@ -468,7 +503,8 @@ contract PolyswapTest is Test {
             t0: block.timestamp,
             t: block.timestamp + timeOffset,
             polymarketOrderHash: orderHash,
-            appData: bytes32(0)
+            appData: bytes32(0),
+            polymarketMakerAmount: TEST_MAKER_AMOUNT
         });
 
         // Should not revert with valid parameters
@@ -566,7 +602,8 @@ contract PolyswapTest is Test {
             t0: block.timestamp,
             t: block.timestamp + 1 days,
             polymarketOrderHash: TEST_ORDER_HASH,
-            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b)
+            appData: bytes32(0x053e648e24f8653eb9cffe71f170227d25f8fd69c135bcf2125ae24f4d210b9b),
+            polymarketMakerAmount: TEST_MAKER_AMOUNT
         });
     }
 }
